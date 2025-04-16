@@ -4,7 +4,7 @@ pipeline {
         ftp_user = "admin_admin_ps"
         ftp_pass = "igps"
         ftp_host = "35.156.141.158"
-        ftp_dir  = "/home/ps.igone.in"
+        ftp_dir  = "/public_html"
     }
 
     stages {
