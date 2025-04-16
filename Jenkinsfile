@@ -9,8 +9,7 @@ pipeline {
             steps {
                 bat """
                     echo Current WORKSPACE: %WORKSPACE%
-                    dir "%WORKSPACE%"
-                    scp -r "%WORKSPACE%\\*" root@${staging_server}:/home/ps.igone.in/
+                    scp -r "%WORKSPACE%" root@${staging_server}:/home/ps.igone.in/
                 """
             }
         }
