@@ -8,7 +8,9 @@ pipeline {
         stage('Deploy To Remote') {
             steps {
                 bat """
-                    scp -r "${WORKSPACE}\\*" root@${staging_server}:/home/ps.igone.in/
+                    echo Current WORKSPACE: %WORKSPACE%
+                    dir "%WORKSPACE%"
+                    scp -r "%WORKSPACE%\\*" root@${staging_server}:/home/ps.igone.in/
                 """
             }
         }
