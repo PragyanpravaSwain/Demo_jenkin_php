@@ -13,7 +13,7 @@ pipeline {
                 bat """
                     echo Uploading via FTP...
 
-                    curl -T index.php ftp://${ftp_host}${ftp_dir}/ --user ${ftp_user}:${ftp_pass} --ftp-create-dirs
+                    curl -T index.html ftp://${ftp_host}${ftp_dir}/ --user ${ftp_user}:${ftp_pass} --ftp-create-dirs
                 """
             }
         }
