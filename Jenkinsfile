@@ -7,7 +7,7 @@ pipeline {
     stages{
         stage('Deploy To Remote'){
             steps {
-                sh 'scp ${WORKSPACE}/* root@${staging_server}:/home/ps.igone.in/'
+                bat 'scp ${WORKSPACE}/* root@${staging_server}:/home/ps.igone.in/'
             }
         }
     }
