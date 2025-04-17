@@ -13,7 +13,7 @@ pipeline {
             agent {
                 docker {
                     image 'ubuntu:latest'
-                    args '-u root'
+                    args '-u root -w /workspace'
                 }
             }
             stages {
