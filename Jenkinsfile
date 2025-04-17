@@ -13,7 +13,7 @@ pipeline {
             agent {
                 docker {
                     image 'ubuntu:latest'
-                    args '-u root -w /workspace'
+                    args '-u root -w C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\demo-first-changes@2\\' // updated path
                 }
             }
             stages {
