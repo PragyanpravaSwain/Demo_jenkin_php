@@ -11,14 +11,12 @@ pipeline {
     stages {
         stage('Upload via FTP') {
             steps {
-                 bat """
-                     echo Current WORKSPACE: %WORKSPACE%
-                     scp -r "%WORKSPACE%" root@${staging_server}:/home/ps.igone.in/
-                     echo Uploading via FTP...
- 
-                     curl -T index.php ftp://${ftp_host}${ftp_dir}/ --user ${ftp_user}:${ftp_pass} --ftp-create-dirs
-                 """
-             }
+                sh '''
+                    echo "Current WORKSPACE: $WORKSPACE"
+                    echo "Uploading index.php via FTP..."
+                    curl -T index.php ftp://$ftp_host$ftp_dir/ --user $ftp_user:$ftp_pass --ftp-create-dirs
+                '''
+            }
         }
     }
 }
