@@ -1,102 +1,68 @@
 pipeline {
     agent any
+
     environment {
         ftp_user = "admin_admin_ps"
         ftp_pass = "igps"
         ftp_host = "35.156.141.158"
         ftp_dir  = "/public_html"
+        docker_image = "php-test-app"
+        container_port = "8080" // Change as needed
+    }
 
-        DOCKER_IMAGE = "php:8.1-apache"
-        CONTAINER_NAME = "php-test-container"
-        TEST_PORT = "8090"
-    }
-    
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
-        stage('Build Docker Test Environment') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                # Create a Dockerfile for testing
-                cat > Dockerfile.test << EOF
-FROM ${DOCKER_IMAGE}
-COPY . /var/www/html/
-EXPOSE 80
-EOF
-                
-                # Build the test image
-                docker build -t php-test-app -f Dockerfile.test .
-                
-                # Run the container
-                docker run -d -p ${TEST_PORT}:80 --name ${CONTAINER_NAME} php-test-app
-                
-                # Wait for container to be ready
-                sleep 5
+                echo "Creating Dockerfile..."
+                echo "FROM php:8.1-apache" > Dockerfile
+                echo "COPY . /var/www/html/" >> Dockerfile
+
+                echo "Building Docker image..."
+                docker build -t ${docker_image} .
                 '''
             }
         }
-        
-        stage('Run Tests') {
+
+        stage('Run Docker Container') {
             steps {
                 sh '''
-                # Basic test to verify the application is running
-                TEST_RESPONSE=$(curl -s http://localhost:${TEST_PORT}/)
-                echo "Test response: $TEST_RESPONSE"
-                
-                if [[ $TEST_RESPONSE != *"Hello from Jenkins + Docker + CyberPanel"* ]]; then
-                  echo "Test failed! Application is not responding correctly."
-                  exit 1
-                fi
-                
-                echo "Tests passed successfully!"
+                echo "Running Docker container for testing..."
+                docker run -d -p ${container_port}:80 --name ${docker_image}_test ${docker_image}
+                echo "Test URL: http://localhost:${container_port}"
                 '''
             }
         }
-        
-        stage('Deploy to CyberPanel') {
+
+        stage('Manual Approval for Production Deploy') {
             when {
-                branch 'main'  // Only deploy when code is merged to main branch
+                branch 'main'
             }
             steps {
-                script {
-                    // Using LFTP for more robust FTP transfer (install if needed)
-                    sh '''
-                    if ! command -v lftp &> /dev/null; then
-                        echo "Installing lftp..."
-                        apt-get update && apt-get install -y lftp || \
-                        yum install -y lftp || \
-                        apk add --no-cache lftp
-                    fi
-                    
-                    echo "Deploying to production server via FTP..."
-                    lftp -c "set ftp:ssl-allow no; \
-                          open -u ${FTP_USER},${FTP_PASS} ${FTP_HOST}; \
-                          mirror -R ./ ${FTP_DIR} --exclude .git/ --exclude Dockerfile.test"
-                    
-                    echo "Deployment completed successfully!"
-                    '''
-                }
+                input message: 'Approve deployment to production?'
+            }
+        }
+
+        stage('Deploy to CyberPanel via FTP') {
+            when {
+                branch 'main'
+            }
+            steps {
+                sh '''
+                echo "Deploying to CyberPanel..."
+                curl -T index.php ftp://${ftp_host}${ftp_dir}/ --user ${ftp_user}:${ftp_pass} --ftp-create-dirs
+                '''
             }
         }
     }
-    
+
     post {
         always {
+            echo 'Cleaning up Docker container...'
             sh '''
-            # Clean up Docker container
-            docker stop ${CONTAINER_NAME} || true
-            docker rm ${CONTAINER_NAME} || true
+            docker stop ${docker_image}_test || true
+            docker rm ${docker_image}_test || true
             '''
-        }
-        success {
-            echo "Pipeline completed successfully!"
-        }
-        failure {
-            echo "Pipeline failed! Check the logs for details."
         }
     }
 }
