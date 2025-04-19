@@ -11,6 +11,12 @@ pipeline {
     }
 
     stages {
+        stage('Checkout Code') {
+            steps {
+                git 'https://github.com/PragyanpravaSwain/Demo_jenkin_php.git'
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -19,12 +25,11 @@ pipeline {
             }
         }
 
-        stage('Run Docker Container and Upload via FTP') {
+        stage('Upload via FTP') {
             steps {
                 script {
                     sh """
-                        docker run --rm --name $container_name $docker_image \
-                        sh -c "curl -T index.php ftp://$ftp_host$ftp_dir/ --user $ftp_user:$ftp_pass --ftp-create-dirs"
+                        curl -T index.php ftp://$ftp_host$ftp_dir/ --user $ftp_user:$ftp_pass --ftp-create-dirs
                     """
                 }
             }
